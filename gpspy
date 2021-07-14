@@ -1,0 +1,48 @@
+import pynmea2
+import serial
+import os.path
+from datetime import datetime
+
+port = "/dev/ttyS0"
+
+#write headers if file doesn't exist
+if (os.path.isfile('gps.log')==False):
+    print("Writing headers")
+    file = open("gps.log","a")
+    file.write("timestamp,latitude,longitude\n")
+
+else:
+    file = open("gps.log","a")
+
+
+def parseGPS(stream):
+    if stream.find('GGA') >0:
+        msg = pynmea2.parse(stream)
+        
+        lon = msg.lon
+        if (msg.lon_dir == "W"):
+            lon = str(lon)
+            lon = "-"+lon
+        lat = msg.lat
+        if (msg.lat_dir == "S"):
+            lat = str(lat)
+            lat = "-"+lat
+        timeNow = str(msg.timestamp) 
+	dateNow = datetime.now()
+	dateNow = str(dateNow)
+        file.write(dateNow)
+        file.write(',')
+        file.write(lat)
+        file.write(',')
+        file.write(lon)
+        file.write("\n")
+
+        
+
+serialPort = serial.Serial(port, baudrate = 9600, timeout = 0.5)
+
+
+for i in range(10):
+    stream = serialPort.readline()
+    parseGPS(stream)
+    i=i+1
